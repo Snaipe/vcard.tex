@@ -2,12 +2,11 @@
 \documentclass[12pt,oneside,final]{article}
 
 \usepackage[xcolornames,svgnames,dvipsnames,cmyk]{xcolor}
-\usepackage{microtype}
 
 \usepackage[
   landscape,
-  paperwidth=55mm,
-  paperheight=85mm,
+  paperwidth=55mm,    % Standard european business card width
+  paperheight=85mm,   % Standard european business card height
   margin=0cm,
   noheadfoot
 ]{geometry}
@@ -15,51 +14,45 @@
 \setlength{\baselineskip}{0cm}
 \setlength{\topskip}{0pt}
 
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.8}
-
 \usepackage[nolinks]{qrcode}
 \usepackage{catchfile}
 \usepackage{filecontents}
 \usepackage{fontawesome}
 \usepackage{fontspec}
 \usepackage{graphics}
+\usepackage{microtype}
 \usepackage{pagecolor}
 \usepackage{parskip}
 \usepackage{tikz}
-
-\newfontfamily{\FA}{FontAwesome}
-\newfontfamily{\Symbola}{Symbola}
-
-\def\faMicrochip{\FA \symbol{"F2DB}}
-
-% load and configure tikz libraries
 \usetikzlibrary{matrix,calc,positioning}
 
-% load external font
+% define fonts & extra symbols
 \setmainfont{Space Mono}
-\setsansfont{Space Mono}
-\setmonofont{Space Mono}
+\newfontfamily{\FA}{FontAwesome}
+\newfontfamily{\Symbola}{Symbola}
+\def\faMicrochip{\FA }
+\def\diacritic{\Symbola 🝰}
 
 \newlength{\qrheight}   \setlength{\qrheight}{30mm}
 \newlength{\edgemargin} \setlength{\edgemargin}{1mm}
-\newlength{\logosize}   \setlength{\logosize}{0.5in}
 \newlength{\infoheight} \setlength{\infoheight}{20mm}
 
-% define colours
+% define colors
 \definecolor{limegreen}{cmyk}{0.564,0,0.317,0.11}
 \definecolor{darkgreen}{cmyk}{0.532,0.15,0.3085,0.555}
 \definecolor{gray}{cmyk}{0.5,0.3,0.3,1}
 \definecolor{pureblack}{cmyk}{1,1,1,1}
 \definecolor{magenta}{cmyk}{0.13,0.98,0.77,0.25}
 \definecolor{lmagenta}{cmyk}{0.13,0.91,0.7,0.07}
-\colorlet{bgcolor}{gray}
-\colorlet{textcolour}{limegreen}
-\colorlet{iconcolour}{limegreen}
-\colorlet{bordercolour}{limegreen}
-\colorlet{mainiconcolor}{lmagenta}
 
-\pagecolor{bgcolor}
+\colorlet{bgcl}{gray}         % background color
+\colorlet{textcl}{limegreen}  % text color
+\colorlet{iconcl}{lmagenta}   % diacritic icon color
+\colorlet{glyphcl}{darkgreen} % fontawesome glyph color
+\colorlet{hlcl}{lmagenta}     % highlight color
+
+\newcommand{\hl}[1]{{\color{lmagenta}#1}\color{textcl}}
+\pagecolor{bgcl}
 
 % vCard definition
 \begin{filecontents*}{vcard.vcf}
@@ -82,95 +75,91 @@ KEY;TYPE=PGP:https://snai.pe/pubkey.pgp
 END:VCARD
 \end{filecontents*}
 
-% change global colour
 \makeatletter
 \newcommand{\globalcolor}[1]{%
   \color{#1}\global\let\default@color\current@color
 }
 
-\CatchFileEdef{\qrdata}{vcard.vcf}{\catcode\endlinechar\active \catcode`\ =12\relax}
-
+% load qr code data
+\CatchFileEdef{\qrdata}{vcard.vcf}{%
+  \catcode\endlinechar\active % don't swallow newlines
+  \catcode`\ =12\relax        % don't swallow spaces
+}
 \makeatother
-\AtBeginDocument{\globalcolor{textcolour}}
+
+% change global color
+\AtBeginDocument{\globalcolor{textcl}}
 
 \begin{document}
 
-% Front
+  % Front
 
-\thispagestyle{empty}
-\begin{center}
-\vspace*{\fill}
-\begin{tikzpicture}
-  \pgfplotsset{mesh/colorspace explicit color output=cmyk}
-  \node[scale=2,color=mainiconcolor] at (current page.center) {\Large \Symbola 🝰};
-\end{tikzpicture}
-\vspace*{\fill}
-\end{center}
+  \thispagestyle{empty}
+  \vspace*{\fill}
+  \begin{tikzpicture}[remember picture, overlay,inner sep=0pt]
+    % Main logo
+    \node[scale=2,color=iconcl,font=\Large]
+      at (current page.center) {\diacritic};
+  \end{tikzpicture}
+  \vspace*{\fill}
 
-\newpage
+  % Back
+  \newpage
 
-% Back
+  \thispagestyle{empty}
+  \vspace*{\fill}
+  \begin{tikzpicture}[remember picture,overlay,inner sep=0pt]
+    \draw (current page.center)
+      ++ (2*\qrheight/3-2mm,\qrheight/2-\infoheight/2)
+      node (helper name) {};
 
-\newcommand{\hl}[1]{{\color{lmagenta}#1}\color{textcolour}}
-\def\dot\hl{dot}
-%\def\at{\color{lmagenta}#1\color{textcolour}}
+    \matrix[inner sep=1mm,
+        every node/.style={anchor=center,color=textcl,font=\tiny},
+        anchor=center]
+      (name) at (helper name.center)
+    {
+      \node{snai \hl{dot}\ pe}; \\
+      \node{diacritic \hl{dot}\ io}; \\
+      \node{me \hl{at}\ snai \hl{dot}\ pe}; \\
+    };
 
-\thispagestyle{empty}
-\vspace*{\fill}
-\begin{tikzpicture}[remember picture,overlay,inner sep=0pt]
-  \pgfplotsset{mesh/colorspace explicit color output=cmyk}
+    \matrix [below=-3mm of name,
+        inner sep=5pt,
+        every node/.style={anchor=center,font=\small,color=glyphcl}]
+      (skills)
+    {
+      \node{\faCode}; &
+      \node{\faAlignJustify}; &
+      \node{\faCodeFork}; &
+      \node{\faMicrochip}; \\
+    };
 
-  \draw (current page.center)
-    ++ (2*\qrheight/3-2mm,\qrheight/2-\infoheight/2)
-    node (helper name) {};
+    \matrix [below=-5mm of skills,
+        inner sep=5pt,
+        every node/.style={anchor=center,font=\tiny,color=glyphcl}]
+      (interests)
+    {
+      \node{\faGamepad}; &
+      \node{\faPencil}; &
+      \node{\faCoffee}; &
+      \node{\faFont}; &
+      \node{\faMusic}; \\
+    };
 
-  \matrix[inner sep=1mm,
-      every node/.style={anchor=center,color=textcolour,font=\tiny},
-      anchor=center]
-    (name) at (helper name.center)
-  {
-    \node{snai \hl{dot}\ pe}; \\
-    \node{diacritic \hl{dot}\ io}; \\
-    \node{me \hl{at}\ snai \hl{dot}\ pe}; \\
-  };
+    \draw[fill=textcl] (current page.center)
+      ++(-\qrheight/2,0)
+      node (helper qr) {};
 
-  \matrix [below=-3mm of name,
-      inner sep=5pt,
-      every node/.style={anchor=center,font=\small,color=darkgreen}]
-    (skills)
-  {
-    \node{\faCode}; &
-    \node{\faAlignJustify}; &
-    \node{\faCodeFork}; &
-    \node{\faMicrochip}; \\
-  };
+    \draw[anchor=center,fill=textcl] (helper qr.center)
+      ++(-\qrheight/2-\edgemargin,\qrheight/2+\edgemargin) rectangle
+      ++(\qrheight+2*\edgemargin,-\qrheight-2*\edgemargin);
 
-  \matrix [below=-5mm of skills,
-      inner sep=5pt,
-      every node/.style={anchor=center,font=\tiny,color=darkgreen}]
-    (interests)
-  {
-    \node{\faGamepad}; &
-    \node{\faPencil}; &
-    \node{\faCoffee}; &
-    \node{\faFont}; &
-    \node{\faMusic}; \\
-  };
+    \node[anchor=center,color=bgcl] (qr)
+      at (helper qr) {\qrcode[level=M,height=\qrheight]{\qrdata}};
 
-  \draw[fill=textcolour] (current page.center)
-    ++(-\qrheight/2,0)
-    node (helper qr) {};
-
-  \draw[anchor=center,fill=textcolour] (helper qr.center)
-    ++(-\qrheight/2-\edgemargin,\qrheight/2+\edgemargin) rectangle
-    ++(\qrheight+2*\edgemargin,-\qrheight-2*\edgemargin);
-
-  \node[anchor=center,color=bgcolor] (qr)
-    at (helper qr) {\qrcode[level=M,height=\qrheight]{\qrdata}};
-
-  \node[anchor=center,scale=3,color=textcolour]
-    at (qr.center) {\Large \Symbola 🝰};
-\end{tikzpicture}
-\vspace*{\fill}
+    \node[anchor=center,scale=3,color=textcl]
+      at (qr.center) {\Large \diacritic};
+  \end{tikzpicture}
+  \vspace*{\fill}
 
 \end{document}
