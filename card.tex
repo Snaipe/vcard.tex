@@ -1,0 +1,176 @@
+% !TEX TS-program = xelatex
+\documentclass[12pt,oneside,final]{article}
+
+\usepackage[xcolornames,svgnames,dvipsnames,cmyk]{xcolor}
+\usepackage{microtype}
+
+\usepackage[
+  landscape,
+  paperwidth=55mm,
+  paperheight=85mm,
+  margin=0cm,
+  noheadfoot
+]{geometry}
+
+\setlength{\baselineskip}{0cm}
+\setlength{\topskip}{0pt}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.8}
+
+\usepackage[nolinks]{qrcode}
+\usepackage{catchfile}
+\usepackage{filecontents}
+\usepackage{fontawesome}
+\usepackage{fontspec}
+\usepackage{graphics}
+\usepackage{pagecolor}
+\usepackage{parskip}
+\usepackage{tikz}
+
+\newfontfamily{\FA}{FontAwesome}
+\newfontfamily{\Symbola}{Symbola}
+
+\def\faMicrochip{\FA \symbol{"F2DB}}
+
+% load and configure tikz libraries
+\usetikzlibrary{matrix,calc,positioning}
+
+% load external font
+\setmainfont{Space Mono}
+\setsansfont{Space Mono}
+\setmonofont{Space Mono}
+
+\newlength{\qrheight}   \setlength{\qrheight}{30mm}
+\newlength{\edgemargin} \setlength{\edgemargin}{1mm}
+\newlength{\logosize}   \setlength{\logosize}{0.5in}
+\newlength{\infoheight} \setlength{\infoheight}{20mm}
+
+% define colours
+\definecolor{limegreen}{cmyk}{0.564,0,0.317,0.11}
+\definecolor{darkgreen}{cmyk}{0.532,0.15,0.3085,0.555}
+\definecolor{gray}{cmyk}{0.5,0.3,0.3,1}
+\definecolor{pureblack}{cmyk}{1,1,1,1}
+\definecolor{magenta}{cmyk}{0.13,0.98,0.77,0.25}
+\definecolor{lmagenta}{cmyk}{0.13,0.91,0.7,0.07}
+\colorlet{bgcolor}{gray}
+\colorlet{textcolour}{limegreen}
+\colorlet{iconcolour}{limegreen}
+\colorlet{bordercolour}{limegreen}
+\colorlet{mainiconcolor}{lmagenta}
+
+\pagecolor{bgcolor}
+
+% vCard definition
+\begin{filecontents*}{vcard.vcf}
+BEGIN:VCARD
+VERSION:4.0
+UID:0de28d96-7421-42d6-84f0-a18a96d0516d
+SOURCE:https://snai.pe/vcard.vcf
+REV:2017-02-18T12:02:43Z
+N:Franklin;Mathieu;;Mr.
+FN:Franklin "Snaipe" Mathieu
+NICKNAME:Snaipe
+PHOTO;MEDIATYPE=image/jpeg:https://snai.pe/images/avatar.jpg
+TITLE:Software Engineer
+TEL;TYPE=CELL:+353 83 876 1315
+EMAIL:me@snai.pe
+URL;type=pref:snai.pe
+URL:diacritic.io
+URL:github.com/Snaipe
+KEY;TYPE=PGP:https://snai.pe/pubkey.pgp
+END:VCARD
+\end{filecontents*}
+
+% change global colour
+\makeatletter
+\newcommand{\globalcolor}[1]{%
+  \color{#1}\global\let\default@color\current@color
+}
+
+\CatchFileEdef{\qrdata}{vcard.vcf}{\catcode\endlinechar\active \catcode`\ =12\relax}
+
+\makeatother
+\AtBeginDocument{\globalcolor{textcolour}}
+
+\begin{document}
+
+% Front
+
+\thispagestyle{empty}
+\begin{center}
+\vspace*{\fill}
+\begin{tikzpicture}
+  \pgfplotsset{mesh/colorspace explicit color output=cmyk}
+  \node[scale=2,color=mainiconcolor] at (current page.center) {\Large \Symbola 🝰};
+\end{tikzpicture}
+\vspace*{\fill}
+\end{center}
+
+\newpage
+
+% Back
+
+\newcommand{\hl}[1]{{\color{lmagenta}#1}\color{textcolour}}
+\def\dot\hl{dot}
+%\def\at{\color{lmagenta}#1\color{textcolour}}
+
+\thispagestyle{empty}
+\vspace*{\fill}
+\begin{tikzpicture}[remember picture,overlay,inner sep=0pt]
+  \pgfplotsset{mesh/colorspace explicit color output=cmyk}
+
+  \draw (current page.center)
+    ++ (2*\qrheight/3-2mm,\qrheight/2-\infoheight/2)
+    node (helper name) {};
+
+  \matrix[inner sep=1mm,
+      every node/.style={anchor=center,color=textcolour,font=\tiny},
+      anchor=center]
+    (name) at (helper name.center)
+  {
+    \node{snai \hl{dot}\ pe}; \\
+    \node{diacritic \hl{dot}\ io}; \\
+    \node{me \hl{at}\ snai \hl{dot}\ pe}; \\
+  };
+
+  \matrix [below=-3mm of name,
+      inner sep=5pt,
+      every node/.style={anchor=center,font=\small,color=darkgreen}]
+    (skills)
+  {
+    \node{\faCode}; &
+    \node{\faAlignJustify}; &
+    \node{\faCodeFork}; &
+    \node{\faMicrochip}; \\
+  };
+
+  \matrix [below=-5mm of skills,
+      inner sep=5pt,
+      every node/.style={anchor=center,font=\tiny,color=darkgreen}]
+    (interests)
+  {
+    \node{\faGamepad}; &
+    \node{\faPencil}; &
+    \node{\faCoffee}; &
+    \node{\faFont}; &
+    \node{\faMusic}; \\
+  };
+
+  \draw[fill=textcolour] (current page.center)
+    ++(-\qrheight/2,0)
+    node (helper qr) {};
+
+  \draw[anchor=center,fill=textcolour] (helper qr.center)
+    ++(-\qrheight/2-\edgemargin,\qrheight/2+\edgemargin) rectangle
+    ++(\qrheight+2*\edgemargin,-\qrheight-2*\edgemargin);
+
+  \node[anchor=center,color=bgcolor] (qr)
+    at (helper qr) {\qrcode[level=M,height=\qrheight]{\qrdata}};
+
+  \node[anchor=center,scale=3,color=textcolour]
+    at (qr.center) {\Large \Symbola 🝰};
+\end{tikzpicture}
+\vspace*{\fill}
+
+\end{document}
